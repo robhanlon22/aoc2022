@@ -1,4 +1,21 @@
 repos:
+  - repo: local
+    hooks:
+      - id: ormolu
+        name: ormolu
+        language: system
+        entry: ormolu -i
+        files: .*\.hs$
+      - id: hlint
+        name: hlint
+        language: system
+        entry: hlint --color
+        files: .*\.hs$
+      - id: hlint-refactor
+        name: hlint-refactor
+        language: system
+        entry: ./hlint-refactor.sh
+        files: .*\.hs$
   - repo: https://github.com/pre-commit/mirrors-prettier
     rev: "v2.7.1"
     hooks:

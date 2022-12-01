@@ -1,6 +1,12 @@
 module Main (main) where
 
-import Lib
+import qualified Day1
+import System.Environment (getArgs)
+
+main' :: [String] -> IO ()
+main' ["1", "1"] = Day1.part1
+main' ["1", "2"] = Day1.part2
+main' args = error $ "Unknown args: " ++ show args
 
 main :: IO ()
-main = someFunc
+main = getArgs >>= main'
