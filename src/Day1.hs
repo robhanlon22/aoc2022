@@ -3,10 +3,7 @@ module Day1 (part1, part2) where
 import Data.List (sortBy)
 import Data.Text (Text)
 import Lib (fetch, parse)
-import Text.Megaparsec
-  ( endBy,
-    sepBy,
-  )
+import Text.Megaparsec (endBy, sepBy)
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Lexer (decimal)
 

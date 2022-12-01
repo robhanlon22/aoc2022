@@ -4,16 +4,9 @@ module Lib (fetch, parse, Parser) where
 
 import Data.Text (Text, pack)
 import Data.Void (Void)
-import Network.Curl
-  ( CurlCode (CurlOK),
-    CurlOption (CurlCookie),
-    curlGetString,
-  )
+import Network.Curl (CurlCode (CurlOK), CurlOption (CurlCookie), curlGetString)
 import System.Directory (doesFileExist)
-import Text.Megaparsec
-  ( Parsec,
-    runParser,
-  )
+import Text.Megaparsec (Parsec, runParser)
 
 type Parser = Parsec Void Text
 
