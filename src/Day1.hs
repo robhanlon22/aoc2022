@@ -2,21 +2,13 @@ module Day1 (part1, part2) where
 
 import Data.List (sortBy)
 import Data.Text (Text)
-import Data.Void (Void)
-import Lib (fetch, parse)
+import Lib (Parser, fetch, parse)
 import Text.Megaparsec
-  ( MonadParsec (try),
-    Parsec,
-    endBy,
-    eof,
-    many,
-    optional,
+  ( endBy,
     sepBy,
   )
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Lexer (decimal)
-
-type Parser = Parsec Void Text
 
 input :: IO Text
 input = fetch 1

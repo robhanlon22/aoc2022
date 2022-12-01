@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib (fetch, parse) where
+module Lib (fetch, parse, Parser) where
 
 import Data.Text (Text, pack)
 import Data.Void (Void)
@@ -17,25 +17,32 @@ import Text.Megaparsec
 
 type Parser = Parsec Void Text
 
+url :: String -> String
+url dayStr = "https://adventofcode.com/2022/day/" ++ dayStr ++ "/input"
+
+readCookie :: IO CurlOption
+readCookie = do
+  token <- readFile "session.secret"
+  return $ CurlCookie $ "session=" ++ token
+
 fetch :: Integer -> IO Text
 fetch day = do
-  let d = show day
-  let filename = d ++ ".txt"
+  let dayStr = show day
+  let filename = dayStr ++ ".txt"
+
   exists <- doesFileExist filename
 
-  if exists
-    then pack <$> readFile filename
-    else do
-      token <- readFile "session.secret"
-      response <-
-        curlGetString
-          ("https://adventofcode.com/2022/day/" ++ d ++ "/input")
-          [CurlCookie $ "session=" ++ token]
-      case response of
-        (CurlOK, body) -> do
-          writeFile (d ++ ".txt") body
-          return $ pack body
-        _ -> error $ show response
+  pack
+    <$> if exists
+      then readFile filename
+      else do
+        cookie <- readCookie
+        response <- curlGetString (url dayStr) [cookie]
+        case response of
+          (CurlOK, body) -> do
+            writeFile filename body
+            return body
+          _ -> error $ show response
 
 parse :: Parser a -> Text -> a
 parse parser t =
