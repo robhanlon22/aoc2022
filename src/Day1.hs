@@ -1,29 +1,43 @@
 module Day1 (part1, part2) where
 
-import Data.List (sort)
-import Data.List.Split (splitWhen)
-import Lib (fetchInput)
+import Control.Monad (void)
+import Data.List (sortBy)
+import Data.Text (Text)
+import Data.Void (Void)
+import Lib (fetch, parse)
+import Text.Megaparsec
+  ( MonadParsec (try),
+    Parsec,
+    many,
+  )
+import Text.Megaparsec.Char (newline)
+import Text.Megaparsec.Char.Lexer (decimal)
 
-input :: IO String
-input = fetchInput 1
+type Parser = Parsec Void Text
 
-elfCalories :: String -> [Integer]
-elfCalories =
-  map (sum . map (read :: String -> Integer)) . splitWhen (== "") . lines
+input :: IO Text
+input = fetch 1
 
-part1' :: String -> Integer
+pCalories :: Parser [[Integer]]
+pCalories = many . try $ do
+  ints <- many $ do
+    int <- decimal
+    void newline
+    return int
+  void $ try newline
+  return ints
+
+elfCalories :: Text -> [Integer]
+elfCalories = map sum . parse pCalories
+
+part1' :: Text -> Integer
 part1' = maximum . elfCalories
 
-part1 :: IO ()
-part1 = do
-  str <- input
-  print (part1' str)
+part1 :: IO Integer
+part1 = part1' <$> input
 
-part2' :: String -> Integer
-part2' =
-  sum . take 3 . reverse . sort . elfCalories
+part2' :: Text -> Integer
+part2' = sum . take 3 . sortBy (flip compare) . elfCalories
 
-part2 :: IO ()
-part2 = do
-  str <- input
-  print (part2' str)
+part2 :: IO Integer
+part2 = part2' <$> input
