@@ -2,7 +2,7 @@ module Day1 (part1, part2) where
 
 import Data.List (sortBy)
 import Data.Text (Text)
-import Lib (Parser, fetch, parse)
+import Lib (fetch, parse)
 import Text.Megaparsec
   ( endBy,
     sepBy,
@@ -13,8 +13,11 @@ import Text.Megaparsec.Char.Lexer (decimal)
 input :: IO Text
 input = fetch 1
 
+parseCalories :: Text -> [[Integer]]
+parseCalories = parse ((decimal `endBy` newline) `sepBy` newline)
+
 elfCalories :: Text -> [Integer]
-elfCalories = map sum . parse ((decimal `endBy` newline) `sepBy` newline)
+elfCalories = map sum . parseCalories
 
 part1' :: Text -> Integer
 part1' = maximum . elfCalories
