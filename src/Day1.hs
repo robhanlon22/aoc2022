@@ -13,14 +13,8 @@ import Text.Megaparsec.Char.Lexer (decimal)
 input :: IO Text
 input = fetch 1
 
-pInts :: Parser [Integer]
-pInts = decimal `endBy` newline
-
-pCalories :: Parser [[Integer]]
-pCalories = pInts `sepBy` newline
-
 elfCalories :: Text -> [Integer]
-elfCalories = map sum . parse pCalories
+elfCalories = map sum . parse ((decimal `endBy` newline) `sepBy` newline)
 
 part1' :: Text -> Integer
 part1' = maximum . elfCalories
