@@ -2,10 +2,10 @@
 
 module Day2 (part1, part2, input, sample) where
 
-import Control.Monad (void)
+import Control.Monad (ap, void)
 import Data.Text (Text)
 import Lib (Parser, doParse, fetch)
-import Text.Megaparsec (choice, endBy)
+import Text.Megaparsec (choice, empty, endBy)
 import Text.Megaparsec.Char (char, newline)
 
 data Move = Rock | Paper | Scissors deriving (Eq, Show)
@@ -63,12 +63,13 @@ pFate = do
   outcome <- pOutcome
   return (opponent, outcome)
 
+orderingScore :: Ordering -> Integer
+orderingScore LT = 6
+orderingScore EQ = 3
+orderingScore GT = 0
+
 outcomeScore :: (Move, Move) -> Integer
-outcomeScore (opponent, self) = f (opponent `compare` self)
-  where
-    f LT = 6
-    f EQ = 3
-    f GT = 0
+outcomeScore = orderingScore . uncurry compare
 
 moveScore :: Move -> Integer
 moveScore Rock = 1
@@ -76,7 +77,7 @@ moveScore Paper = 2
 moveScore Scissors = 3
 
 roundScore :: (Move, Move) -> Integer
-roundScore r@(_, self) = moveScore self + outcomeScore r
+roundScore = ((+) . moveScore . snd) `ap` outcomeScore
 
 toRound :: (Move, Ordering) -> (Move, Move)
 toRound (Rock, GT) = (Rock, Scissors)
