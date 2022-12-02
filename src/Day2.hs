@@ -2,13 +2,17 @@
 
 module Day2 (part1, part2, input, sample) where
 
-import Control.Monad (ap, void)
+import Control.Monad (liftM2, void)
 import Data.Text (Text)
 import Lib (Parser, doParse, fetch)
 import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (char, newline)
 
 data Move = Rock | Paper | Scissors deriving (Eq, Show)
+
+data Round = Round Move Move
+
+data Result = Result Move Ordering
 
 instance Ord Move where
   Rock `compare` Rock = EQ
@@ -41,66 +45,70 @@ pMove =
       Scissors <$ char 'Z'
     ]
 
-pOutcome :: Parser Ordering
-pOutcome =
+pOrdering :: Parser Ordering
+pOrdering =
   choice
     [ GT <$ char 'X',
       EQ <$ char 'Y',
       LT <$ char 'Z'
     ]
 
-pRound :: Parser (Move, Move)
+pRound :: Parser Round
 pRound = do
   opponent <- pMove
   void $ char ' '
-  self <- pMove
-  return (opponent, self)
+  Round opponent <$> pMove
 
-pFate :: Parser (Move, Ordering)
-pFate = do
+pResult :: Parser Result
+pResult = do
   opponent <- pMove
   void $ char ' '
-  outcome <- pOutcome
-  return (opponent, outcome)
+  Result opponent <$> pOrdering
 
 orderingScore :: Ordering -> Integer
 orderingScore LT = 6
 orderingScore EQ = 3
 orderingScore GT = 0
 
-outcomeScore :: (Move, Move) -> Integer
-outcomeScore = orderingScore . uncurry compare
+outcome :: Round -> Ordering
+outcome (Round opponent self) = opponent `compare` self
 
-moveScore :: Move -> Integer
-moveScore Rock = 1
-moveScore Paper = 2
-moveScore Scissors = 3
+outcomeScore :: Round -> Integer
+outcomeScore = orderingScore . outcome
 
-roundScore :: (Move, Move) -> Integer
-roundScore = ((+) . moveScore . snd) `ap` outcomeScore
+moveScore :: Round -> Integer
+moveScore (Round _ Rock) = 1
+moveScore (Round _ Paper) = 2
+moveScore (Round _ Scissors) = 3
 
-toRound :: (Move, Ordering) -> (Move, Move)
-toRound (Rock, GT) = (Rock, Scissors)
-toRound (Rock, EQ) = (Rock, Rock)
-toRound (Rock, LT) = (Rock, Paper)
-toRound (Paper, GT) = (Paper, Rock)
-toRound (Paper, EQ) = (Paper, Paper)
-toRound (Paper, LT) = (Paper, Scissors)
-toRound (Scissors, GT) = (Scissors, Paper)
-toRound (Scissors, EQ) = (Scissors, Scissors)
-toRound (Scissors, LT) = (Scissors, Rock)
+roundScore :: Round -> Integer
+roundScore = liftM2 (+) moveScore outcomeScore
 
-fateScore :: (Move, Ordering) -> Integer
-fateScore = roundScore . toRound
+toRound :: Result -> Round
+toRound result@(Result opponent _) =
+  let move = case result of
+        Result Rock GT -> Scissors
+        Result Rock EQ -> Rock
+        Result Rock LT -> Paper
+        Result Paper GT -> Rock
+        Result Paper EQ -> Paper
+        Result Paper LT -> Scissors
+        Result Scissors GT -> Paper
+        Result Scissors EQ -> Scissors
+        Result Scissors LT -> Rock
+   in Round opponent move
 
-pPart1 :: Parser [(Move, Move)]
+resultScore :: Result -> Integer
+resultScore = roundScore . toRound
+
+pPart1 :: Parser [Round]
 pPart1 = pRound `endBy` newline
 
-pPart2 :: Parser [(Move, Ordering)]
-pPart2 = pFate `endBy` newline
+pPart2 :: Parser [Result]
+pPart2 = pResult `endBy` newline
 
 part1 :: Text -> Integer
 part1 = sum . map roundScore . doParse pPart1
 
 part2 :: Text -> Integer
-part2 = sum . map fateScore . doParse pPart2
+part2 = sum . map resultScore . doParse pPart2
