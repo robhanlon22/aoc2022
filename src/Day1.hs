@@ -1,29 +1,34 @@
-module Day1 (part1, part2) where
+module Day1 (part1, part2, input) where
 
-import Data.List (sortBy)
+import Data.Heap (MaxHeap, fromList, take)
 import Data.Text (Text)
-import Lib (fetch, parse)
+import Lib (doParse, fetch)
 import Text.Megaparsec (endBy, sepBy)
 import Text.Megaparsec.Char (newline)
 import Text.Megaparsec.Char.Lexer (decimal)
+import Prelude hiding (take)
 
-input :: IO Text
+input :: Text
 input = fetch 1
 
-parseCalories :: Text -> [[Integer]]
-parseCalories = parse ((decimal `endBy` newline) `sepBy` newline)
+-- | The input text consists of numbers followed by newlines, with each group
+-- separated by a newline. The parser declared here mirrors that structure
+-- exactly.
+parse :: Num a => Text -> [[a]]
+parse = doParse $ decimal `endBy` newline `sepBy` newline
 
-elfCalories :: Text -> [Integer]
-elfCalories = map sum . parseCalories
+-- | Given the elf data, build a heap of the sums of each elf.
+heapify :: (Num a, Ord a) => [[a]] -> MaxHeap a
+heapify = fromList . map sum
 
-part1' :: Text -> Integer
-part1' = maximum . elfCalories
+-- | Take the top N items from the elf heap.
+sumTopN :: (Num a, Ord a) => Int -> [[a]] -> a
+sumTopN = (sum .) . (. heapify) . take
 
-part1 :: IO Integer
-part1 = part1' <$> input
+-- | Part 1 sums the top 1, a.k.a. takes the max.
+part1 :: (Num a, Ord a) => Text -> a
+part1 = sumTopN 1 . parse
 
-part2' :: Text -> Integer
-part2' = sum . take 3 . sortBy (flip compare) . elfCalories
-
-part2 :: IO Integer
-part2 = part2' <$> input
+-- | Part 2 sums the top 3.
+part2 :: (Num a, Ord a) => Text -> a
+part2 = sumTopN 3 . parse

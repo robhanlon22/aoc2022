@@ -26,6 +26,7 @@ dependencies:
   - megaparsec
   - split
   - text
+  - heap
 
 ghc-options:
   - -Wall
