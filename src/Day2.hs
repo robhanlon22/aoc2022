@@ -1,118 +1,119 @@
+{-# LANGUAGE MonadComprehensions #-}
+{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Day2 (part1, part2, input, sample) where
 
-import Control.Monad (liftM2)
 import Data.Text (Text)
 import Lib (Parser, doParse, fetch)
 import Text.Megaparsec (choice, empty, many)
 import Text.Megaparsec.Char (char, space1)
 import qualified Text.Megaparsec.Char.Lexer as L
+import Prelude hiding (round)
 
-lexeme :: Parser a -> Parser a
-lexeme = L.lexeme $ L.space space1 empty empty
+day :: Integer
+day = 2
 
-data Move = Rock | Paper | Scissors deriving (Eq, Show)
+input :: Text
+input = fetch day
+
+sample :: Text
+sample = "A Y\nB X\nC Z\n"
+
+data Move = Rock | Paper | Scissors deriving (Eq, Show, Enum, Bounded)
 
 data Round = Round Move Move
 
 data Result = Result Move Ordering
 
+cyclicSucc :: (Enum a, Bounded a, Eq a) => a -> a
+cyclicSucc x
+  | x == maxBound = minBound
+  | otherwise = succ x
+
+cyclicPred :: (Enum a, Bounded a, Eq a) => a -> a
+cyclicPred x
+  | x == minBound = maxBound
+  | otherwise = pred x
+
 instance Ord Move where
-  Rock `compare` Rock = EQ
-  Rock `compare` Paper = LT
-  Rock `compare` Scissors = GT
-  Paper `compare` Rock = GT
-  Paper `compare` Paper = EQ
-  Paper `compare` Scissors = LT
-  Scissors `compare` Rock = LT
-  Scissors `compare` Paper = GT
-  Scissors `compare` Scissors = EQ
+  compare x y
+    | x == cyclicPred y = LT
+    | x == cyclicSucc y = GT
+    | otherwise = EQ
 
-day :: Integer
-day = 2
-
-sample :: Text
-sample = "A Y\nB X\nC Z\n"
-
-input :: Text
-input = fetch day
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme $ L.space space1 empty empty
 
 pMove :: Parser Move
 pMove =
-  choice
-    [ Rock <$ char 'A',
-      Paper <$ char 'B',
-      Scissors <$ char 'C',
-      Rock <$ char 'X',
-      Paper <$ char 'Y',
-      Scissors <$ char 'Z'
-    ]
+  lexeme $
+    choice
+      [ Rock <$ char 'A',
+        Paper <$ char 'B',
+        Scissors <$ char 'C',
+        Rock <$ char 'X',
+        Paper <$ char 'Y',
+        Scissors <$ char 'Z'
+      ]
 
 pOrdering :: Parser Ordering
 pOrdering =
-  choice
-    [ GT <$ char 'X',
-      EQ <$ char 'Y',
-      LT <$ char 'Z'
-    ]
+  lexeme $
+    choice
+      [ GT <$ char 'X',
+        EQ <$ char 'Y',
+        LT <$ char 'Z'
+      ]
 
 pRound :: Parser Round
-pRound = do
-  opponent <- lexeme pMove
-  self <- lexeme pMove
-  return $ Round opponent self
+pRound = [Round opponent self | opponent <- pMove, self <- pMove]
 
 pResult :: Parser Result
-pResult = do
-  opponent <- lexeme pMove
-  ordering <- lexeme pOrdering
-  return $ Result opponent ordering
-
-orderingScore :: Ordering -> Integer
-orderingScore LT = 6
-orderingScore EQ = 3
-orderingScore GT = 0
+pResult = [Result opponent ordering | opponent <- pMove, ordering <- pOrdering]
 
 outcome :: Round -> Ordering
 outcome (Round opponent self) = opponent `compare` self
 
 outcomeScore :: Round -> Integer
-outcomeScore = orderingScore . outcome
+outcomeScore = s . outcome
+  where
+    s LT = 6
+    s EQ = 3
+    s GT = 0
+
+moveScore' :: Move -> Integer
+moveScore' Rock = 1
+moveScore' Paper = 2
+moveScore' Scissors = 3
 
 moveScore :: Round -> Integer
-moveScore (Round _ Rock) = 1
-moveScore (Round _ Paper) = 2
-moveScore (Round _ Scissors) = 3
+moveScore (Round _ self) = moveScore' self
 
 roundScore :: Round -> Integer
-roundScore = liftM2 (+) moveScore outcomeScore
+roundScore round = moveScore round + outcomeScore round
 
-toRound :: Result -> Round
-toRound result@(Result opponent _) =
-  let move = case result of
-        Result Rock GT -> Scissors
-        Result Rock EQ -> Rock
-        Result Rock LT -> Paper
-        Result Paper GT -> Rock
-        Result Paper EQ -> Paper
-        Result Paper LT -> Scissors
-        Result Scissors GT -> Paper
-        Result Scissors EQ -> Scissors
-        Result Scissors LT -> Rock
-   in Round opponent move
+determineRound :: Result -> Round
+determineRound (Result opponent ordering) =
+  Round
+    opponent
+    ( let causesOutcome m = outcome (Round opponent m) == ordering
+          predMove = cyclicPred opponent
+          succMove = cyclicSucc opponent
+       in if
+              | causesOutcome predMove -> predMove
+              | causesOutcome succMove -> succMove
+              | otherwise -> opponent
+    )
 
 resultScore :: Result -> Integer
-resultScore = roundScore . toRound
+resultScore = roundScore . determineRound
 
-pPart1 :: Parser [Round]
-pPart1 = many pRound
-
-pPart2 :: Parser [Result]
-pPart2 = many pResult
+part :: (a -> Integer) -> Parser a -> Text -> Integer
+part s p = sum . map s . doParse (many p)
 
 part1 :: Text -> Integer
-part1 = sum . map roundScore . doParse pPart1
+part1 = part roundScore pRound
 
 part2 :: Text -> Integer
-part2 = sum . map resultScore . doParse pPart2
+part2 = part resultScore pResult
