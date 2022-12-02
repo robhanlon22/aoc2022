@@ -1,5 +1,4 @@
 {-# LANGUAGE MonadComprehensions #-}
-{-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Day2 (part1, part2, input, sample) where
@@ -25,6 +24,37 @@ data Move = Rock | Paper | Scissors deriving (Eq, Show, Enum, Bounded)
 data Round = Round Move Move
 
 data Result = Result Move Ordering
+
+class Scorable a where
+  score :: a -> Integer
+
+instance Scorable Move where
+  score Rock = 1
+  score Paper = 2
+  score Scissors = 3
+
+instance Scorable Ordering where
+  score LT = 6
+  score EQ = 3
+  score GT = 0
+
+instance Scorable Round where
+  score round@(Round _ self) = score self + score (outcome round)
+
+instance Scorable Result where
+  score (Result opponent ordering) =
+    score (Round opponent self)
+    where
+      causesOutcome m = outcome (Round opponent m) == ordering
+      predMove = cyclicPred opponent
+      succMove = cyclicSucc opponent
+      self
+        | causesOutcome predMove = predMove
+        | causesOutcome succMove = succMove
+        | otherwise = opponent
+
+instance Scorable a => Scorable [a] where
+  score = sum . map score
 
 cyclicSucc :: (Enum a, Bounded a, Eq a) => a -> a
 cyclicSucc x
@@ -75,46 +105,11 @@ pResult = [Result opponent ordering | opponent <- pMove, ordering <- pOrdering]
 outcome :: Round -> Ordering
 outcome (Round opponent self) = opponent `compare` self
 
-outcomeScore' :: Ordering -> Integer
-outcomeScore' LT = 6
-outcomeScore' EQ = 3
-outcomeScore' GT = 0
-
-outcomeScore :: Round -> Integer
-outcomeScore = outcomeScore' . outcome
-
-moveScore' :: Move -> Integer
-moveScore' Rock = 1
-moveScore' Paper = 2
-moveScore' Scissors = 3
-
-moveScore :: Round -> Integer
-moveScore (Round _ self) = moveScore' self
-
-roundScore :: Round -> Integer
-roundScore round = moveScore round + outcomeScore round
-
-determineRound :: Result -> Round
-determineRound (Result opponent ordering) =
-  Round
-    opponent
-    ( let causesOutcome m = outcome (Round opponent m) == ordering
-          predMove = cyclicPred opponent
-          succMove = cyclicSucc opponent
-       in if
-              | causesOutcome predMove -> predMove
-              | causesOutcome succMove -> succMove
-              | otherwise -> opponent
-    )
-
-resultScore :: Result -> Integer
-resultScore = roundScore . determineRound
-
-part :: (a -> Integer) -> Parser a -> Text -> Integer
-part s p = sum . map s . doParse (many p)
+part :: (Scorable a) => Parser a -> Text -> Integer
+part p t = score $ doParse (many p) t
 
 part1 :: Text -> Integer
-part1 = part roundScore pRound
+part1 = part pRound
 
 part2 :: Text -> Integer
-part2 = part resultScore pResult
+part2 = part pResult
