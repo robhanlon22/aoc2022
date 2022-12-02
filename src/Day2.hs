@@ -5,7 +5,7 @@ module Day2 (part1, part2, input, sample) where
 import Control.Monad (ap, void)
 import Data.Text (Text)
 import Lib (Parser, doParse, fetch)
-import Text.Megaparsec (choice, empty, endBy)
+import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (char, newline)
 
 data Move = Rock | Paper | Scissors deriving (Eq, Show)
