@@ -75,12 +75,13 @@ pResult = [Result opponent ordering | opponent <- pMove, ordering <- pOrdering]
 outcome :: Round -> Ordering
 outcome (Round opponent self) = opponent `compare` self
 
+outcomeScore' :: Ordering -> Integer
+outcomeScore' LT = 6
+outcomeScore' EQ = 3
+outcomeScore' GT = 0
+
 outcomeScore :: Round -> Integer
-outcomeScore = s . outcome
-  where
-    s LT = 6
-    s EQ = 3
-    s GT = 0
+outcomeScore = outcomeScore' . outcome
 
 moveScore' :: Move -> Integer
 moveScore' Rock = 1
