@@ -2,11 +2,15 @@
 
 module Day2 (part1, part2, input, sample) where
 
-import Control.Monad (liftM2, void)
+import Control.Monad (liftM2)
 import Data.Text (Text)
 import Lib (Parser, doParse, fetch)
-import Text.Megaparsec (choice, endBy)
-import Text.Megaparsec.Char (char, newline)
+import Text.Megaparsec (choice, empty, many)
+import Text.Megaparsec.Char (char, space1)
+import qualified Text.Megaparsec.Char.Lexer as L
+
+lexeme :: Parser a -> Parser a
+lexeme = L.lexeme $ L.space space1 empty empty
 
 data Move = Rock | Paper | Scissors deriving (Eq, Show)
 
@@ -55,15 +59,15 @@ pOrdering =
 
 pRound :: Parser Round
 pRound = do
-  opponent <- pMove
-  void $ char ' '
-  Round opponent <$> pMove
+  opponent <- lexeme pMove
+  self <- lexeme pMove
+  return $ Round opponent self
 
 pResult :: Parser Result
 pResult = do
-  opponent <- pMove
-  void $ char ' '
-  Result opponent <$> pOrdering
+  opponent <- lexeme pMove
+  ordering <- lexeme pOrdering
+  return $ Result opponent ordering
 
 orderingScore :: Ordering -> Integer
 orderingScore LT = 6
@@ -102,10 +106,10 @@ resultScore :: Result -> Integer
 resultScore = roundScore . toRound
 
 pPart1 :: Parser [Round]
-pPart1 = pRound `endBy` newline
+pPart1 = many pRound
 
 pPart2 :: Parser [Result]
-pPart2 = pResult `endBy` newline
+pPart2 = many pResult
 
 part1 :: Text -> Integer
 part1 = sum . map roundScore . doParse pPart1
