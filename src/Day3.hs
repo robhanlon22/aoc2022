@@ -25,14 +25,10 @@ offset char
 toPriority :: Char -> Int
 toPriority c = ord c - offset c
 
--- Turn all nested chars into their priorities.
-toPriorities :: [[Char]] -> [[Int]]
-toPriorities = map $ map toPriority
-
 -- Takes a function that manipulates priorities into an answer and the input,
 -- then handles parsing -> conversion -> calling manipulator -> sum.
 sumPriorities :: ([[Int]] -> [Int]) -> String -> Int
-sumPriorities f = sum . f . toPriorities . lines
+sumPriorities f = sum . f . map (map toPriority) . lines
 
 -- Split each list of priorities in half, intersect each half, take only the
 -- first values (which will be the double-packed item), then add them together.
