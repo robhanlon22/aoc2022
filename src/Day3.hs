@@ -22,7 +22,7 @@ offset char
   | otherwise = 38
 
 toOrds :: [[Char]] -> [[Int]]
-toOrds = map $ map (liftM2 (-) ord offset)
+toOrds = map $ map $ liftM2 (-) ord offset
 
 part1 :: String -> Int
 part1 =
