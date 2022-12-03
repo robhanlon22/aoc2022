@@ -19,11 +19,13 @@ input = fetch day
 sample :: Text
 sample = "A Y\nB X\nC Z\n"
 
-data Move = Rock | Paper | Scissors deriving (Eq, Show, Enum, Bounded)
+data Move = Rock | Paper | Scissors deriving (Eq, Show)
 
 data Round = Round Move Move
 
-data Result = Result Move Ordering
+data Outcome = Lose | Draw | Win deriving (Eq, Show)
+
+data Result = Result Move Outcome
 
 class Scorable a where
   score :: a -> Integer
@@ -33,44 +35,52 @@ instance Scorable Move where
   score Paper = 2
   score Scissors = 3
 
-instance Scorable Ordering where
-  score LT = 6
-  score EQ = 3
-  score GT = 0
+instance Scorable Outcome where
+  score Lose = 0
+  score Draw = 3
+  score Win = 6
 
 instance Scorable Round where
-  score round@(Round _ self) = score self + score (outcome round)
+  score (Round opponent self) =
+    score self
+      + score
+        ( case self of
+            Rock -> case opponent of
+              Rock -> Draw
+              Paper -> Lose
+              Scissors -> Win
+            Paper -> case opponent of
+              Rock -> Win
+              Paper -> Draw
+              Scissors -> Lose
+            Scissors -> case opponent of
+              Rock -> Lose
+              Paper -> Win
+              Scissors -> Draw
+        )
 
 instance Scorable Result where
-  score (Result opponent ordering) =
-    score (Round opponent self)
-    where
-      causesOutcome m = outcome (Round opponent m) == ordering
-      predMove = cyclicPred opponent
-      succMove = cyclicSucc opponent
-      self
-        | causesOutcome predMove = predMove
-        | causesOutcome succMove = succMove
-        | otherwise = opponent
+  score (Result opponent outcome) =
+    score $
+      Round
+        opponent
+        ( case outcome of
+            Win -> case opponent of
+              Rock -> Paper
+              Paper -> Scissors
+              Scissors -> Rock
+            Lose -> case opponent of
+              Rock -> Scissors
+              Paper -> Rock
+              Scissors -> Paper
+            Draw -> case opponent of
+              Rock -> Rock
+              Paper -> Paper
+              Scissors -> Scissors
+        )
 
 instance Scorable a => Scorable [a] where
   score = sum . map score
-
-cyclicSucc :: (Enum a, Bounded a, Eq a) => a -> a
-cyclicSucc x
-  | x == maxBound = minBound
-  | otherwise = succ x
-
-cyclicPred :: (Enum a, Bounded a, Eq a) => a -> a
-cyclicPred x
-  | x == minBound = maxBound
-  | otherwise = pred x
-
-instance Ord Move where
-  compare x y
-    | x == cyclicPred y = LT
-    | x == cyclicSucc y = GT
-    | otherwise = EQ
 
 lexeme :: Parser a -> Parser a
 lexeme = L.lexeme $ L.space space1 empty empty
@@ -87,26 +97,23 @@ pMove =
         Scissors <$ char 'Z'
       ]
 
-pOrdering :: Parser Ordering
-pOrdering =
+pOutcome :: Parser Outcome
+pOutcome =
   lexeme $
     choice
-      [ GT <$ char 'X',
-        EQ <$ char 'Y',
-        LT <$ char 'Z'
+      [ Lose <$ char 'X',
+        Draw <$ char 'Y',
+        Win <$ char 'Z'
       ]
 
 pRound :: Parser Round
-pRound = [Round opponent self | opponent <- pMove, self <- pMove]
+pRound = pMove >>= (<$> pMove) . Round
 
 pResult :: Parser Result
-pResult = [Result opponent ordering | opponent <- pMove, ordering <- pOrdering]
-
-outcome :: Round -> Ordering
-outcome (Round opponent self) = opponent `compare` self
+pResult = pMove >>= (<$> pOutcome) . Result
 
 part :: (Scorable a) => Parser a -> Text -> Integer
-part p t = score $ doParse (many p) t
+part = (score .) . doParse . many
 
 part1 :: Text -> Integer
 part1 = part pRound

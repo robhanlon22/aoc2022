@@ -27,7 +27,7 @@ library
   exposed-modules:
       Day1
       Day2
-      DayN
+      Day3
       Lib
   other-modules:
       Paths_aoc2022
@@ -38,10 +38,12 @@ library
       base >=4.7 && <5
     , curl
     , directory
+    , hashable
     , heap
     , megaparsec
     , split
     , text
+    , unordered-containers
   default-language: Haskell2010
 
 executable aoc2022-exe
@@ -56,10 +58,12 @@ executable aoc2022-exe
     , base >=4.7 && <5
     , curl
     , directory
+    , hashable
     , heap
     , megaparsec
     , split
     , text
+    , unordered-containers
   default-language: Haskell2010
 
 test-suite aoc2022-test
@@ -75,8 +79,10 @@ test-suite aoc2022-test
     , base >=4.7 && <5
     , curl
     , directory
+    , hashable
     , heap
     , megaparsec
     , split
     , text
+    , unordered-containers
   default-language: Haskell2010

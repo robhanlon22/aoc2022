@@ -23,10 +23,12 @@ dependencies:
   - base >= 4.7 && < 5
   - curl
   - directory
+  - hashable
+  - heap
   - megaparsec
   - split
   - text
-  - heap
+  - unordered-containers
 
 ghc-options:
   - -Wall
