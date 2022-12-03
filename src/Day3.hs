@@ -30,6 +30,8 @@ toPriority = liftM2 (-) ord offset
 toPriorities :: [[Char]] -> [[Int]]
 toPriorities = map $ map toPriority
 
+-- Takes a function that manipulates priorities into an answer and the input,
+-- then handles parsing -> conversion -> calling manipulator -> sum.
 sumPriorities :: ([[Int]] -> [Int]) -> String -> Int
 sumPriorities = (sum .) . (. (toPriorities . lines))
 
