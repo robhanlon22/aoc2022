@@ -15,15 +15,9 @@ input = unpack $ fetch day
 sample :: String
 sample = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw\n"
 
--- Compute the offset to change a character's ordinal to its priority.
-offset :: Num a => Char -> a
-offset char
-  | char >= 'a' = 96
-  | otherwise = 38
-
 -- Subtract the offset from the character's priority.
 toPriority :: Char -> Int
-toPriority c = ord c - offset c
+toPriority c = ord c - (if c >= 'a' then 96 else 38)
 
 -- Takes a function that manipulates priorities into an answer and the input,
 -- then handles parsing -> conversion -> calling manipulator -> sum.
