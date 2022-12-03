@@ -15,7 +15,7 @@ input = unpack $ fetch day
 sample :: String
 sample = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw\n"
 
--- Subtract the offset from the character's priority.
+-- Subtract the offset from the character's ordinal to get the priority.
 toPriority :: Char -> Int
 toPriority c = ord c - (if c >= 'a' then 96 else 38)
 
