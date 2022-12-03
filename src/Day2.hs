@@ -107,13 +107,17 @@ pOutcome =
       ]
 
 pRound :: Parser Round
-pRound = pMove >>= (<$> pMove) . Round
+pRound = do
+  opponent <- pMove
+  Round opponent <$> pMove
 
 pResult :: Parser Result
-pResult = pMove >>= (<$> pOutcome) . Result
+pResult = do
+  opponent <- pMove
+  Result opponent <$> pOutcome
 
 part :: (Scorable a) => Parser a -> Text -> Integer
-part = (score .) . doParse . many
+part p = score . doParse (many p)
 
 part1 :: Text -> Integer
 part1 = part pRound
