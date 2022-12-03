@@ -1,6 +1,5 @@
 module Day3 (part1, part2, input, sample) where
 
-import Control.Monad (liftM2)
 import Data.Char (ord)
 import Data.List (intersect)
 import Data.List.Split (chunksOf)
@@ -24,7 +23,7 @@ offset char
 
 -- Subtract the offset from the character's priority.
 toPriority :: Char -> Int
-toPriority = liftM2 (-) ord offset
+toPriority c = ord c + offset c
 
 -- Turn all nested chars into their priorities.
 toPriorities :: [[Char]] -> [[Int]]
@@ -33,14 +32,14 @@ toPriorities = map $ map toPriority
 -- Takes a function that manipulates priorities into an answer and the input,
 -- then handles parsing -> conversion -> calling manipulator -> sum.
 sumPriorities :: ([[Int]] -> [Int]) -> String -> Int
-sumPriorities = (sum .) . (. (toPriorities . lines))
+sumPriorities f = sum . f . toPriorities . lines
 
 -- Split each list of priorities in half, intersect each half, take only the
 -- first values (which will be the double-packed item), then add them together.
 part1 :: String -> Int
 part1 =
   sumPriorities $
-    map (head . uncurry intersect . (splitAt =<< div 2 . length))
+    map (\x -> head $ uncurry intersect $ splitAt (length x `div` 2) x)
 
 -- Split the lists of priorities into three chunks, intersect all chunks, take
 -- the first values (which will be the badge), then add them together.
