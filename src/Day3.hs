@@ -40,7 +40,7 @@ sumPriorities = (sum .) . (. (toPriorities . lines))
 part1 :: String -> Int
 part1 =
   sumPriorities $
-    map (head . uncurry intersect . (splitAt =<< (`div` 2) . length))
+    map (head . uncurry intersect . (splitAt =<< div 2 . length))
 
 -- Split the lists of priorities into three chunks, intersect all chunks, take
 -- the first values (which will be the badge), then add them together.
