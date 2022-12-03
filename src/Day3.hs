@@ -2,7 +2,7 @@ module Day3 (part1, part2, input, sample) where
 
 import Control.Monad (liftM2)
 import Data.Char (ord)
-import Data.List (intersect, nub)
+import Data.List (intersect)
 import Data.List.Split (chunksOf)
 import Data.Text (unpack)
 import Lib (fetch)
@@ -16,25 +16,33 @@ input = unpack $ fetch day
 sample :: String
 sample = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw\n"
 
+-- Compute the offset to change a character's ordinal to its priority.
 offset :: Num a => Char -> a
 offset char
   | char >= 'a' = 96
   | otherwise = 38
 
-toOrds :: [[Char]] -> [[Int]]
-toOrds = map $ map $ liftM2 (-) ord offset
+-- Subtract the offset from the character's priority.
+toPriority :: Char -> Int
+toPriority = liftM2 (-) ord offset
 
+-- Turn all nested chars into their priorities.
+toPriorities :: [[Char]] -> [[Int]]
+toPriorities = map $ map toPriority
+
+sumPriorities :: ([[Int]] -> [Int]) -> String -> Int
+sumPriorities = (sum .) . (. (toPriorities . lines))
+
+-- Split each list of priorities in half, intersect each half, take only the
+-- first values (which will be the double-packed item), then add them together.
 part1 :: String -> Int
 part1 =
-  sum
-    . map (head . nub . uncurry intersect . (splitAt =<< (`div` 2) . length))
-    . toOrds
-    . lines
+  sumPriorities $
+    map (head . uncurry intersect . (splitAt =<< (`div` 2) . length))
 
+-- Split the lists of priorities into three chunks, intersect all chunks, take
+-- the first values (which will be the badge), then add them together.
 part2 :: String -> Int
 part2 =
-  sum
-    . map (head . nub . foldl1 intersect)
-    . chunksOf 3
-    . toOrds
-    . lines
+  sumPriorities $
+    map (head . foldl1 intersect) . chunksOf 3
