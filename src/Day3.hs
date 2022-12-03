@@ -23,7 +23,7 @@ offset char
 
 -- Subtract the offset from the character's priority.
 toPriority :: Char -> Int
-toPriority c = ord c + offset c
+toPriority c = ord c - offset c
 
 -- Turn all nested chars into their priorities.
 toPriorities :: [[Char]] -> [[Int]]
