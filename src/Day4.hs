@@ -41,12 +41,15 @@ pPair = do
 pInput :: Parser [Pair]
 pInput = pPair `endBy` newline
 
+parse :: Text -> [Pair]
+parse = doParse pInput
+
 solve :: (Inter -> Bool) -> Text -> Int
 solve f =
   length
     . filter f
     . map (\pair@(Pair {..}) -> let inter = lhs `intersect` rhs in Inter {..})
-    . doParse pInput
+    . parse
 
 part1 :: Text -> Int
 part1 = solve $ \(Inter {pair = Pair {..}, ..}) -> inter == lhs || inter == rhs
