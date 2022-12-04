@@ -1,5 +1,6 @@
 module Day3 (part1, part2, input, sample) where
 
+import Control.Arrow
 import Data.Char (ord)
 import Data.List (intersect)
 import Data.List.Split (chunksOf)
