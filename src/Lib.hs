@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib (fetch, doParse, Parser) where
+module Lib (fetch, doParse, Parser, countBy) where
 
 import Data.Text (Text, pack)
 import Data.Void (Void)
@@ -55,3 +55,6 @@ doParse parser t =
   case runParser parser "" t of
     Right v -> v
     Left e -> error $ show e
+
+countBy :: (Foldable t1, Num b) => (t2 -> Bool) -> t1 t2 -> b
+countBy f = foldl (\count xs -> count + if f xs then 1 else 0) 0
