@@ -1,10 +1,10 @@
-module DayN (part1, part2, input, sample) where
+module Day5 (part1, part2, input, sample) where
 
 import Data.Text (Text)
 import Lib (Parser, doParse, fetch)
 
 day :: Integer
-day = undefined
+day = 5
 
 input :: Text
 input = fetch day
