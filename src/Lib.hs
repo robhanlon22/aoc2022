@@ -1,8 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib (fetch, doParse, Parser, countBy) where
+module Lib (fetch, doParse, Parser, countBy, readFileUnsafe) where
 
 import Data.Text (Text, pack)
+import qualified Data.Text.IO as TIO
 import Data.Void (Void)
 import Network.Curl (CurlCode (CurlOK), CurlOption (CurlCookie), curlGetString)
 import System.Directory (doesFileExist)
@@ -42,6 +43,9 @@ fetchSafe day = do
             writeFile filename body
             return body
           _ -> error $ show response
+
+readFileUnsafe :: FilePath -> Text
+readFileUnsafe = unsafePerformIO . TIO.readFile
 
 -- | For convenience, unsafely extract the Text from the result of fetchSafe.
 -- Would never be used in production code, but this is Advent of Code!
