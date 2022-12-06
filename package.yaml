@@ -22,6 +22,7 @@ description: Please see the README on GitHub at <https://github.com/robhanlon22/
 dependencies:
   - base >= 4.7 && < 5
   - curl
+  - criterion
   - directory
   - hashable
   - heap

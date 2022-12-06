@@ -1,7 +1,7 @@
 {-# LANGUAGE MultiWayIf #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Day6 (input, checkPacket, tests) where
+module Day6 (input, checkPacket, checkPackets, tests) where
 
 import Data.List (nub)
 import Data.Text (unpack)
@@ -31,3 +31,6 @@ checkPacket n = check 0
               | length chunk < n -> Nothing
               | nub chunk == chunk -> Just $ idx + n
               | otherwise -> check (succ idx) (tail list)
+
+checkPackets :: Int -> [String] -> [(String, Maybe Int)]
+checkPackets n = map (\x -> (x, checkPacket n x))

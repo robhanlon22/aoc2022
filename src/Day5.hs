@@ -13,13 +13,17 @@ import Text.Megaparsec
   ( MonadParsec (try),
     between,
     choice,
+    manyTill_,
     sepBy,
     some,
+    (<|>),
   )
 import Text.Megaparsec.Char
   ( alphaNumChar,
     char,
+    letterChar,
     newline,
+    printChar,
     string,
   )
 import Text.Megaparsec.Char.Lexer (decimal)
@@ -73,14 +77,15 @@ pCrateLine = do
 pCrateLines :: Parser [[Maybe Char]]
 pCrateLines = some . try $ pCrateLine
 
+pIgnore :: Parser ()
+pIgnore = do
+  void (letterChar <|> char ' ')
+
 pInstruction :: Parser Instruction
 pInstruction = do
-  void $ string "move "
-  count <- decimal
-  void $ string " from "
-  from <- decimal
-  void $ string " to "
-  to <- decimal
+  (_, count) <- manyTill_ pIgnore decimal
+  (_, from) <- manyTill_ pIgnore decimal
+  (_, to) <- manyTill_ pIgnore decimal
   void newline
   return $ Instruction {..}
 
