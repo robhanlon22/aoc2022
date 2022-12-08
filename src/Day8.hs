@@ -35,14 +35,9 @@ pDigits = V.fromList <$> manyTill pDigit (lookAhead newline)
 pWorld :: Parser World
 pWorld = V.fromList <$> (pDigits `endBy` newline)
 
-data Cell = Cell {value :: Integer, coord :: (Int, Int)} deriving (Eq, Show)
-
-instance Ord Cell where
-  compare Cell {value = a} Cell {value = b} = a `compare` b
-
 data Surroundings = Surroundings
-  { cell :: Cell,
-    rays :: [[Cell]]
+  { cell :: Integer,
+    rays :: [V.Vector Integer]
   }
   deriving (Eq, Show)
 
@@ -54,29 +49,33 @@ surroundings i =
         map
           (\row -> map (row,) [0 .. (pred width)])
           [0 .. (pred height)]
-      makeCell coord@(row, col) = Cell {value = i V.! row V.! col, ..}
+      getValue (row, col) = i V.! row V.! col
    in concatMap
         ( map
             ( \coord@(row, col) ->
                 let left =
-                      [ makeCell (row, c)
-                        | c <- [(pred col), (pred (pred col)) .. 0]
-                      ]
+                      V.fromList
+                        [ getValue (row, c)
+                          | c <- [(pred col), (pred (pred col)) .. 0]
+                        ]
                     right =
-                      [ makeCell (row, c)
-                        | c <- [(succ col) .. (pred width)]
-                      ]
+                      V.fromList
+                        [ getValue (row, c)
+                          | c <- [(succ col) .. (pred width)]
+                        ]
                     up =
-                      [ makeCell (r, col)
-                        | r <- [(pred row), (pred (pred row)) .. 0]
-                      ]
+                      V.fromList
+                        [ getValue (r, col)
+                          | r <- [(pred row), (pred (pred row)) .. 0]
+                        ]
                     down =
-                      [ makeCell (r, col)
-                        | r <- [(succ row) .. (pred height)]
-                      ]
+                      V.fromList
+                        [ getValue (r, col)
+                          | r <- [(succ row) .. (pred height)]
+                        ]
                  in Surroundings
-                      { cell = makeCell coord,
-                        rays = filter (not . null) [left, right, up, down]
+                      { cell = getValue coord,
+                        rays = [left, right, up, down]
                       }
             )
         )
@@ -98,8 +97,8 @@ part2 =
             ( map
                 ( \ray ->
                     min
-                      (length (takeWhile (cell >) ray) + 1)
-                      (length ray)
+                      (V.length (V.takeWhile (cell >) ray) + 1)
+                      (V.length ray)
                 )
                 rays
             )
