@@ -7,7 +7,7 @@ module Day8 (part1Sample, part1Input, part2Sample, part2Input, input, sample) wh
 
 import Data.Text qualified as T
 import Data.Vector qualified as V
-import Lib (Parser, fetch, solve)
+import Lib (Parser, countBy, fetch, solve)
 import Text.Megaparsec (MonadParsec (lookAhead), endBy, manyTill)
 import Text.Megaparsec.Char (digitChar, newline)
 
@@ -82,11 +82,7 @@ surroundings i =
         indices
 
 part1 :: World -> Result
-part1 =
-  sum
-    . map
-      (\Surroundings {..} -> if any (all (cell >)) rays then 1 else 0)
-    . surroundings
+part1 = countBy (\Surroundings {..} -> any (all (cell >)) rays) . surroundings
 
 part2 :: World -> Result
 part2 =
