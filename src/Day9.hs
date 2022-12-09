@@ -30,26 +30,33 @@ sample2 = "R 5\nU 8\nL 8\nD 3\nR 17\nD 10\nL 25\nU 20\n"
 
 data Dir = U | D | L | R deriving (Eq, Show)
 
-data Move = Move {dir :: Dir, n :: Integer} deriving (Eq, Show)
+newtype Move = Move Dir deriving (Eq, Show)
 
-newtype Input = Input {moves :: [Move]} deriving (Eq, Show)
+newtype Input = Input [Move] deriving (Eq, Show)
 
-pMove :: Parser Move
+pMove :: Parser [Move]
 pMove = do
-  dir <- choice [U <$ char 'U', D <$ char 'D', L <$ char 'L', R <$ char 'R']
+  dir <-
+    choice
+      [ U <$ char 'U',
+        D <$ char 'D',
+        L <$ char 'L',
+        R <$ char 'R'
+      ]
   void $ char ' '
   n <- L.decimal
-  return Move {..}
+  return $ replicate n (Move dir)
 
 pInput :: Parser Input
 pInput = do
-  moves <- pMove `endBy` newline
-  return Input {..}
+  Input . concat <$> (pMove `endBy` newline)
+
+type Point = (Integer, Integer)
 
 data World = World
-  { hPos :: (Integer, Integer),
-    tPoses :: S.Seq (Integer, Integer),
-    tVisited :: HS.HashSet (Integer, Integer)
+  { hPos :: Point,
+    tPoses :: S.Seq Point,
+    tVisited :: HS.HashSet Point
   }
   deriving (Eq, Show)
 
@@ -61,49 +68,60 @@ newWorld nTails =
       tVisited = HS.singleton (0, 0)
     }
 
-deltas :: [(Integer, Integer)]
+deltas :: [Point]
 deltas = [(dx, dy) | dx <- [(-1) .. 1], dy <- [(-1) .. 1]]
 
-isNeighbor :: (Integer, Integer) -> (Integer, Integer) -> Bool
-isNeighbor (pX, pY) (tX, tY) = any (\(dx, dy) -> pX + dx == tX && pY + dy == tY) deltas
+isNeighbor :: Point -> Point -> Bool
+isNeighbor (pX, pY) (tX, tY) =
+  any
+    (\(dx, dy) -> pX + dx == tX && pY + dy == tY)
+    deltas
 
-offset :: (Ord a, Num a) => a -> a -> a
-offset a b = clamp (-1, 1) (a - b)
+tailDelta :: (Ord a, Num a) => a -> a -> a
+tailDelta a b = clamp (-1, 1) (a - b)
 
-nextTail ::
-  ((Integer, Integer), S.Seq (Integer, Integer)) ->
-  (Integer, Integer) ->
-  ((Integer, Integer), S.Seq (Integer, Integer))
-nextTail (p@(pX, pY), s) t@(tX, tY) = (pos, s S.|> pos)
+adjust :: (Ord a, Ord b, Num a, Num b) => (a, b) -> (a, b) -> (a, b)
+adjust (pX, pY) t@(tX, tY) =
+  addTuples t (tailDelta pX tX, tailDelta pY tY)
+
+nextTail :: (Point, S.Seq Point) -> Point -> (Point, S.Seq Point)
+nextTail (p, s) t = (t', s S.|> t')
   where
-    (dx, dy) =
-      if isNeighbor p t
-        then (0, 0)
-        else (offset pX tX, offset pY tY)
-    pos = (tX + dx, tY + dy)
+    t' = if isNeighbor p t then t else adjust p t
+
+dirDeltas :: (Num a, Num b) => Dir -> (a, b)
+dirDeltas U = (0, 1)
+dirDeltas D = (0, -1)
+dirDeltas L = (-1, 0)
+dirDeltas R = (1, 0)
+
+addTuples :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
+addTuples (a1, a2) (b1, b2) = (a1 + b1, a2 + b2)
 
 move :: World -> [Move] -> World
 move world [] = world
-move World {hPos = (hX, hY), ..} (m@Move {..} : xs) =
-  let hPos' = case dir of
-        U -> (hX, hY + 1)
-        D -> (hX, hY - 1)
-        L -> (hX - 1, hY)
-        R -> (hX + 1, hY)
-      (tPos, tPoses') = foldl nextTail (hPos', S.empty) tPoses
-      tVisited' = HS.insert tPos tVisited
-      moves' = if n == 1 then xs else (m {n = n - 1}) : xs
-      world' = World {hPos = hPos', tPoses = tPoses', tVisited = tVisited'}
-   in move world' moves'
+move World {..} ((Move dir) : ms) = move world ms
+  where
+    hPos' = addTuples hPos $ dirDeltas dir
+    (tPos, tPoses') = foldl nextTail (hPos', S.empty) tPoses
+    tVisited' = HS.insert tPos tVisited
+    world =
+      World
+        { hPos = hPos',
+          tPoses = tPoses',
+          tVisited = tVisited'
+        }
 
-go :: [Move] -> Int -> Int
-go moves n = let World {..} = move (newWorld n) moves in HS.size tVisited
+go :: Int -> Input -> Int
+go n (Input moves) = HS.size tVisited
+  where
+    World {..} = move (newWorld n) moves
 
 part1 :: Input -> Result
-part1 Input {..} = go moves 1
+part1 = go 1
 
 part2 :: Input -> Result
-part2 Input {..} = go moves 9
+part2 = go 9
 
 solve' :: (Input -> Result) -> T.Text -> Result
 solve' part = solve part pInput
