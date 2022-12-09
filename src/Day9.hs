@@ -2,14 +2,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Day9 (part1Sample, part1Input, part2Sample, part2Sample2, part2Input, input, sample) where
+module Day9 (Result, part1Sample, part1Input, part2Sample, part2Sample2, part2Input, input, sample) where
 
 import Control.Monad (void)
 import Data.HashSet qualified as HS
 import Data.Ord (clamp)
 import Data.Sequence qualified as S
 import Data.Text qualified as T
-import Lib (Parser, fetch, solve)
+import Lib (Parser, fetch, solve2)
 import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (char, newline)
 import Text.Megaparsec.Char.Lexer qualified as L
@@ -77,7 +77,7 @@ deltas :: [Point]
 deltas = [(dx, dy) | dx <- [-1 .. 1], dy <- [-1 .. 1]]
 
 isNeighbor :: Point -> Point -> Bool
-isNeighbor p t = any (\d -> p +:+ d == t) deltas
+isNeighbor t p = any (\d -> p +:+ d == t) deltas
 
 tailDelta :: (Ord a, Num a) => a -> a -> a
 tailDelta a b = clamp (-1, 1) (a - b)
@@ -89,7 +89,7 @@ adjustTail (pX, pY) t@(tX, tY) =
 nextTail :: (Point, S.Seq Point) -> Point -> (Point, S.Seq Point)
 nextTail (p, s) t = (t', s S.|> t')
   where
-    t' = if p `isNeighbor` t then t else adjustTail p t
+    t' = if t `isNeighbor` p then t else adjustTail p t
 
 dirDeltas :: (Num a, Num b) => Dir -> (a, b)
 dirDeltas U = (0, 1)
@@ -126,7 +126,7 @@ part2 :: Input -> Result
 part2 = go 9
 
 solve' :: (Input -> Result) -> T.Text -> Result
-solve' part = solve part pInput
+solve' = solve2 pInput
 
 part1Sample :: Result
 part1Sample = solve' part1 sample

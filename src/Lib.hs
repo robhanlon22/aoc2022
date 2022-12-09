@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib (fetch, doParse, Parser, countBy, readFileUnsafe, solve, fetchSafe) where
+module Lib (fetch, doParse, Parser, countBy, readFileUnsafe, solve, fetchSafe, solve2) where
 
 import Data.Text (Text, pack)
 import qualified Data.Text.IO as TIO
@@ -65,3 +65,6 @@ countBy f = foldl (\count xs -> count + if f xs then 1 else 0) 0
 
 solve :: (a -> b) -> Parser a -> Text -> b
 solve part parser text = part $ doParse parser text
+
+solve2 :: Parser a -> (a -> b) -> Text -> b
+solve2 parser part text = part $ doParse parser text
