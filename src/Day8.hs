@@ -7,7 +7,7 @@ module Day8 (part1Sample, part1Input, part2Sample, part2Input, input, sample) wh
 
 import Data.Text qualified as T
 import Data.Vector qualified as V
-import Lib (Parser, countBy, fetch, solve)
+import Lib (Parser, countBy, fetchSafe, solve)
 import Text.Megaparsec (MonadParsec (lookAhead), endBy, manyTill)
 import Text.Megaparsec.Char (digitChar, newline)
 
@@ -18,11 +18,11 @@ type Result = Int
 day :: Integer
 day = 8
 
-input :: T.Text
-input = fetch day
+input :: IO T.Text
+input = fetchSafe day
 
-sample :: T.Text
-sample = "30373\n25512\n65332\n33549\n35390\n"
+sample :: IO T.Text
+sample = return "30373\n25512\n65332\n33549\n35390\n"
 
 pDigit :: Parser Integer
 pDigit = do
@@ -42,44 +42,25 @@ data Surroundings = Surroundings
   deriving (Eq, Show)
 
 surroundings :: V.Vector (V.Vector Integer) -> [Surroundings]
-surroundings i =
-  let height = V.length i
-      width = V.length $ i V.! 0
-      indices =
-        map
-          (\row -> map (row,) [0 .. (pred width)])
-          [0 .. (pred height)]
-      getValue (row, col) = i V.! row V.! col
-   in concatMap
-        ( map
-            ( \coord@(row, col) ->
-                let left =
-                      V.fromList
-                        [ getValue (row, c)
-                          | c <- [(pred col), (pred (pred col)) .. 0]
-                        ]
-                    right =
-                      V.fromList
-                        [ getValue (row, c)
-                          | c <- [(succ col) .. (pred width)]
-                        ]
-                    up =
-                      V.fromList
-                        [ getValue (r, col)
-                          | r <- [(pred row), (pred (pred row)) .. 0]
-                        ]
-                    down =
-                      V.fromList
-                        [ getValue (r, col)
-                          | r <- [(succ row) .. (pred height)]
-                        ]
-                 in Surroundings
-                      { cell = getValue coord,
-                        rays = [left, right, up, down]
-                      }
-            )
-        )
-        indices
+surroundings i = concatMap (map surrounds) indices
+  where
+    height = V.length i
+    width = V.length $ i V.! 0
+    rows = [0 .. (pred height)]
+    cols = [0 .. (pred width)]
+    indices = map (\row -> map (row,) cols) rows
+    getValue (row, col) = i V.! row V.! col
+    surrounds coord@(row, col) =
+      let cell = getValue coord
+          rays =
+            map
+              (V.fromList . map getValue)
+              [ [(row, c) | c <- [(pred col), (pred (pred col)) .. 0]],
+                [(row, c) | c <- [(succ col) .. (pred width)]],
+                [(r, col) | r <- [(succ row) .. (pred height)]],
+                [(r, col) | r <- [(pred row), (pred (pred row)) .. 0]]
+              ]
+       in Surroundings {..}
 
 part1 :: World -> Result
 part1 = countBy (\Surroundings {..} -> any (all (cell >)) rays) . surroundings
@@ -104,14 +85,14 @@ part2 =
 solve' :: (World -> Result) -> T.Text -> Result
 solve' part = solve part pWorld
 
-part1Sample :: Result
-part1Sample = solve' part1 sample
+part1Sample :: IO Result
+part1Sample = solve' part1 <$> sample
 
-part1Input :: Result
-part1Input = solve' part1 input
+part1Input :: IO Result
+part1Input = solve' part1 <$> input
 
-part2Sample :: Result
-part2Sample = solve' part2 sample
+part2Sample :: IO Result
+part2Sample = solve' part2 <$> sample
 
-part2Input :: Result
-part2Input = solve' part2 input
+part2Input :: IO Result
+part2Input = solve' part2 <$> input

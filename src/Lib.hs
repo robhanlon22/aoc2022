@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lib (fetch, doParse, Parser, countBy, readFileUnsafe, solve) where
+module Lib (fetch, doParse, Parser, countBy, readFileUnsafe, solve, fetchSafe) where
 
 import Data.Text (Text, pack)
 import qualified Data.Text.IO as TIO
