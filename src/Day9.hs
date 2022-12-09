@@ -14,7 +14,7 @@ import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (char, newline)
 import Text.Megaparsec.Char.Lexer qualified as L
 
-type Result = Int
+type Result = Either Error Int
 
 day :: Integer
 day = 9
@@ -30,26 +30,9 @@ sample2 = "R 5\nU 8\nL 8\nD 3\nR 17\nD 10\nL 25\nU 20\n"
 
 data Dir = U | D | L | R deriving (Eq, Show)
 
-newtype Move = Move Dir deriving (Eq, Show)
+type Input = [Dir]
 
-newtype Input = Input [Move] deriving (Eq, Show)
-
-pMove :: Parser [Move]
-pMove = do
-  dir <-
-    choice
-      [ U <$ char 'U',
-        D <$ char 'D',
-        L <$ char 'L',
-        R <$ char 'R'
-      ]
-  void $ char ' '
-  n <- L.decimal
-  return $ replicate n (Move dir)
-
-pInput :: Parser Input
-pInput = do
-  Input . concat <$> (pMove `endBy` newline)
+data Error = NoTailsError deriving (Eq, Show)
 
 type Point = (Integer, Integer)
 
@@ -60,34 +43,53 @@ data World = World
   }
   deriving (Eq, Show)
 
-newWorld :: Int -> World
-newWorld nTails =
-  World
-    { hPos = (0, 0),
-      tPoses = S.replicate nTails (0, 0),
-      tVisited = HS.singleton (0, 0)
-    }
+pMove :: Parser [Dir]
+pMove = do
+  dir <-
+    choice
+      [ U <$ char 'U',
+        D <$ char 'D',
+        L <$ char 'L',
+        R <$ char 'R'
+      ]
+  void $ char ' '
+  n <- L.decimal
+  return $ replicate n dir
+
+pInput :: Parser Input
+pInput = concat <$> (pMove `endBy` newline)
+
+origin :: Point
+origin = (0, 0)
+
+newWorld :: Int -> Either Error World
+newWorld nTails
+  | nTails <= 0 = Left NoTailsError
+  | otherwise =
+      Right
+        World
+          { hPos = origin,
+            tPoses = S.replicate nTails origin,
+            tVisited = HS.singleton origin
+          }
 
 deltas :: [Point]
-deltas = [(dx, dy) | dx <- [(-1) .. 1], dy <- [(-1) .. 1]]
+deltas = [(dx, dy) | dx <- [-1 .. 1], dy <- [-1 .. 1]]
 
 isNeighbor :: Point -> Point -> Bool
-isNeighbor (pX, pY) (tX, tY) =
-  any
-    (\(dx, dy) -> pX + dx == tX && pY + dy == tY)
-    deltas
+isNeighbor p t = any (\d -> p +:+ d == t) deltas
 
 tailDelta :: (Ord a, Num a) => a -> a -> a
 tailDelta a b = clamp (-1, 1) (a - b)
 
-adjust :: (Ord a, Ord b, Num a, Num b) => (a, b) -> (a, b) -> (a, b)
-adjust (pX, pY) t@(tX, tY) =
-  addTuples t (tailDelta pX tX, tailDelta pY tY)
+adjustTail :: (Ord a, Ord b, Num a, Num b) => (a, b) -> (a, b) -> (a, b)
+adjustTail (pX, pY) t@(tX, tY) =
+  t +:+ (tailDelta pX tX, tailDelta pY tY)
 
 nextTail :: (Point, S.Seq Point) -> Point -> (Point, S.Seq Point)
 nextTail (p, s) t = (t', s S.|> t')
   where
-    t' = if isNeighbor p t then t else adjust p t
+    t' = if p `isNeighbor` t then t else adjustTail p t
 
 dirDeltas :: (Num a, Num b) => Dir -> (a, b)
 dirDeltas U = (0, 1)
@@ -95,14 +97,14 @@ dirDeltas D = (0, -1)
 dirDeltas L = (-1, 0)
 dirDeltas R = (1, 0)
 
-addTuples :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
-addTuples (a1, a2) (b1, b2) = (a1 + b1, a2 + b2)
+(+:+) :: (Num a, Num b) => (a, b) -> (a, b) -> (a, b)
+(+:+) (a1, a2) (b1, b2) = (a1 + b1, a2 + b2)
 
-move :: World -> [Move] -> World
+move :: World -> [Dir] -> World
 move world [] = world
-move World {..} ((Move dir) : ms) = move world ms
+move World {..} (dir : dirs) = move world dirs
   where
-    hPos' = addTuples hPos $ dirDeltas dir
+    hPos' = hPos +:+ dirDeltas dir
     (tPos, tPoses') = foldl nextTail (hPos', S.empty) tPoses
     tVisited' = HS.insert tPos tVisited
     world =
@@ -112,10 +114,10 @@ move World {..} ((Move dir) : ms) = move world ms
           tVisited = tVisited'
         }
 
-go :: Int -> Input -> Int
-go n (Input moves) = HS.size tVisited
-  where
-    World {..} = move (newWorld n) moves
+go :: Int -> Input -> Either Error Int
+go n moves = do
+  world <- newWorld n
+  return $ HS.size $ tVisited $ move world moves
 
 part1 :: Input -> Result
 part1 = go 1
