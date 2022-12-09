@@ -14,6 +14,21 @@ import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (char, newline)
 import Text.Megaparsec.Char.Lexer qualified as L
 
+data Dir = U | D | L | R deriving (Eq, Show)
+
+data Error = NoTailsError deriving (Eq, Show)
+
+type Point = (Integer, Integer)
+
+data World = World
+  { hPos :: Point,
+    tPoses :: S.Seq Point,
+    tVisited :: HS.HashSet Point
+  }
+  deriving (Eq, Show)
+
+type Input = [Dir]
+
 type Result = Either Error Int
 
 day :: Integer
@@ -27,21 +42,6 @@ sample = "R 4\nU 4\nL 3\nD 1\nR 4\nD 1\nL 5\nR 2\n"
 
 sample2 :: T.Text
 sample2 = "R 5\nU 8\nL 8\nD 3\nR 17\nD 10\nL 25\nU 20\n"
-
-data Dir = U | D | L | R deriving (Eq, Show)
-
-type Input = [Dir]
-
-data Error = NoTailsError deriving (Eq, Show)
-
-type Point = (Integer, Integer)
-
-data World = World
-  { hPos :: Point,
-    tPoses :: S.Seq Point,
-    tVisited :: HS.HashSet Point
-  }
-  deriving (Eq, Show)
 
 pMove :: Parser [Dir]
 pMove = do
