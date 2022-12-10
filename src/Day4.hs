@@ -50,7 +50,7 @@ newUnions :: Pair -> Unions
 newUnions pair@(Pair {..}) = let unions = [lhs] `union` [rhs] in Unions {..}
 
 containing :: (Pair -> Range Integer -> Bool) -> Unions -> Bool
-containing f u@(Unions {..}) = check unions
+containing f (Unions {..}) = check unions
   where
     check [] = False
     check [i] = f pair i

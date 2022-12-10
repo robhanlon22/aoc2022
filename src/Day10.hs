@@ -6,7 +6,7 @@ module Day10 (part1Sample, part1Input, part2Sample, part2Input, input, sample) w
 import Control.Monad (void)
 import Data.List.Split (chunksOf)
 import Data.Text qualified as T
-import Lib
+import Lib (Parser, fetch, solve)
 import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (newline, string)
 import Text.Megaparsec.Char.Lexer (decimal, signed)

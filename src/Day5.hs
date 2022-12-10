@@ -23,7 +23,6 @@ import Text.Megaparsec.Char
     char,
     letterChar,
     newline,
-    printChar,
     string,
   )
 import Text.Megaparsec.Char.Lexer (decimal)
