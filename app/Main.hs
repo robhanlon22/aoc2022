@@ -3,6 +3,7 @@ module Main (main) where
 import Criterion.Main
 import Data.Text
 import qualified Day10
+import qualified Day11
 import qualified Day5
 import qualified Day6
 import qualified Day9
@@ -38,5 +39,10 @@ main =
         "Day10"
         [ bench "part1" $ whnf (const Day10.part1Input) zero,
           bench "part2" $ whnf (const Day10.part2Input) zero
+        ],
+      bgroup
+        "Day11"
+        [ bench "part1" $ whnf (const Day11.part1Input) zero,
+          bench "part2" $ whnf (const Day11.part2Input) zero
         ]
     ]

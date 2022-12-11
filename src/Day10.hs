@@ -6,6 +6,7 @@ module Day10 (part1Sample, part1Input, part2Sample, part2Input, input, sample) w
 import Control.Monad (void)
 import Data.List.Split (chunksOf)
 import Data.Text qualified as T
+import Data.Vector qualified as V
 import Lib (Parser, fetch, solve)
 import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (newline, string)
@@ -55,10 +56,10 @@ execute i =
 
 part1 :: Input -> Int
 part1 i =
-  let h = execute i
+  let h = V.fromList $ execute i
    in sum $
         map
-          (\n -> (h !! pred n) * n)
+          (\n -> (h V.! pred n) * n)
           [20, 60, 100, 140, 180, 220]
 
 screenWidth :: Int
