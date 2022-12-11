@@ -4,12 +4,12 @@
 
 module Day9 (Result, part1Sample, part1Input, part2Sample, part2Sample2, part2Input, input, sample) where
 
-import Control.Monad (void)
 import Data.HashSet qualified as HS
 import Data.Ord (clamp)
 import Data.Sequence qualified as S
 import Data.Text qualified as T
 import Lib (Parser, fetch, solve2)
+import RIO
 import Text.Megaparsec (choice, endBy)
 import Text.Megaparsec.Char (char, newline)
 import Text.Megaparsec.Char.Lexer qualified as L
@@ -105,7 +105,7 @@ move world [] = world
 move World {..} (dir : dirs) = move world dirs
   where
     hPos' = hPos +:+ dirDeltas dir
-    (tPos, tPoses') = foldl nextTail (hPos', S.empty) tPoses
+    (tPos, tPoses') = foldl' nextTail (hPos', S.empty) tPoses
     tVisited' = HS.insert tPos tVisited
     world =
       World

@@ -1,15 +1,13 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Day4 (part1, part2, input, sample) where
 
-import Control.Monad (void)
 import Data.Range (Range, union, (+=+))
-import Data.Text (Text)
 import Lib (Parser, countBy, doParse, fetch)
+import RIO
 import Text.Megaparsec (endBy)
 import Text.Megaparsec.Char (char, newline)
-import qualified Text.Megaparsec.Char.Lexer as L
+import Text.Megaparsec.Char.Lexer qualified as L
 
 data Pair = Pair {lhs, rhs :: Range Integer}
 

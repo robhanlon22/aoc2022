@@ -1,11 +1,11 @@
-{-# LANGUAGE MultiWayIf #-}
-{-# LANGUAGE OverloadedStrings #-}
-
 module Day6 (input, checkPacket, checkPackets, tests) where
 
-import Data.List (nub)
 import Data.Text (unpack)
 import Lib (fetch)
+import RIO
+import RIO.List
+import RIO.List.Partial
+import RIO.Partial (succ)
 
 day :: Integer
 day = 6

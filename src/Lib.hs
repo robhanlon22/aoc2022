@@ -1,11 +1,9 @@
-{-# LANGUAGE OverloadedStrings #-}
-
 module Lib (fetch, doParse, Parser, countBy, readFileUnsafe, solve, fetchSafe, solve2) where
 
-import Data.Text (Text, pack)
-import qualified Data.Text.IO as TIO
-import Data.Void (Void)
+import Data.Text qualified as T
+import Data.Text.IO qualified as TIO
 import Network.Curl (CurlCode (CurlOK), CurlOption (CurlCookie), curlGetString)
+import RIO
 import System.Directory (doesFileExist)
 import System.IO.Unsafe (unsafePerformIO)
 import Text.Megaparsec (Parsec, runParser)
@@ -20,8 +18,8 @@ url dayStr = "https://adventofcode.com/2022/day/" ++ dayStr ++ "/input"
 -- used in an authenticated request.
 readCookie :: IO CurlOption
 readCookie = do
-  token <- readFile "session.secret"
-  return $ CurlCookie $ "session=" ++ token
+  token <- TIO.readFile "session.secret"
+  return $ CurlCookie $ T.unpack $ "session=" <> token
 
 -- | Fetches the input for a given day. Attempts to load cached input from disk.
 -- If cached input is not present, load from the Advent of Code website.
@@ -32,17 +30,17 @@ fetchSafe day = do
 
   exists <- doesFileExist filename
 
-  pack
-    <$> if exists
-      then readFile filename
-      else do
-        cookie <- readCookie
-        response <- curlGetString (url dayStr) [cookie]
-        case response of
-          (CurlOK, body) -> do
-            writeFile filename body
-            return body
-          _ -> error $ show response
+  if exists
+    then TIO.readFile filename
+    else do
+      cookie <- readCookie
+      response <- curlGetString (url dayStr) [cookie]
+      case response of
+        (CurlOK, body) -> do
+          let body' = T.pack body
+          TIO.writeFile filename body'
+          return body'
+        _ -> error $ show response
 
 readFileUnsafe :: FilePath -> Text
 readFileUnsafe = unsafePerformIO . TIO.readFile
@@ -61,7 +59,7 @@ doParse parser t =
     Left e -> error $ show e
 
 countBy :: (Foldable t1, Num b) => (t2 -> Bool) -> t1 t2 -> b
-countBy f = foldl (\count xs -> count + if f xs then 1 else 0) 0
+countBy f = foldl' (\count xs -> count + if f xs then 1 else 0) 0
 
 solve :: (a -> b) -> Parser a -> Text -> b
 solve part parser text = part $ doParse parser text

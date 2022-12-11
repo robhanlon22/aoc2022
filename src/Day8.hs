@@ -8,6 +8,9 @@ module Day8 (part1Sample, part1Input, part2Sample, part2Input, input, sample) wh
 import Data.Text qualified as T
 import Data.Vector qualified as V
 import Lib (Parser, countBy, fetchSafe, solve)
+import RIO
+import RIO.List.Partial
+import RIO.Partial
 import Text.Megaparsec (MonadParsec (lookAhead), endBy, manyTill)
 import Text.Megaparsec.Char (digitChar, newline)
 

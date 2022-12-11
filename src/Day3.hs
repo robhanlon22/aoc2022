@@ -1,23 +1,25 @@
 module Day3 (part1, part2, input, sample) where
 
-import Data.Char (ord)
-import Data.List (intersect)
-import Data.List.Split (chunksOf)
-import Data.Text (unpack)
-import Lib (fetch)
+import Data.Char as C
+import Data.List.Split qualified as X
+import Data.Text qualified as T
+import Lib
+import RIO
+import RIO.List
+import RIO.List.Partial
 
 day :: Integer
 day = 3
 
 input :: String
-input = unpack $ fetch day
+input = T.unpack $ fetch day
 
 sample :: String
 sample = "vJrwpWtwJgWrhcsFMMfFFhFp\njqHRNqRjqzjGDLGLrsFMfFZSrLrFZsSL\nPmmdzqPrVvPwwTWBwg\nwMqvLMZHhHMvwLHjbvcjnnSBnvTQFn\nttgJtRGJQctTZtZT\nCrZsJsPPZsGzwwsLwLmpwMDw\n"
 
 -- Subtract the offset from the character's ordinal to get the priority.
 toPriority :: Char -> Int
-toPriority c = ord c - (if c >= 'a' then 96 else 38)
+toPriority c = C.ord c - (if c >= 'a' then 96 else 38)
 
 -- Takes a function that manipulates priorities into an answer and the input,
 -- then handles parsing -> conversion -> calling manipulator -> sum.
@@ -36,4 +38,4 @@ part1 =
 part2 :: String -> Int
 part2 =
   sumPriorities $
-    map (head . foldl1 intersect) . chunksOf 3
+    map (head . foldl1' intersect) . X.chunksOf 3

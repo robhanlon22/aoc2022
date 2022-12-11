@@ -3,12 +3,12 @@
 
 module Day5 (part1, part2, input, sample) where
 
-import Control.Monad (void)
-import qualified Data.HashMap.Lazy as HM
-import Data.List (transpose)
-import Data.Maybe (catMaybes)
-import Data.Text (Text, pack, unlines)
+import Data.HashMap.Lazy qualified as HM
+import Data.Text qualified as T
 import Lib (Parser, doParse, fetch)
+import RIO hiding (some, to, try)
+import RIO.List
+import RIO.List.Partial
 import Text.Megaparsec
   ( MonadParsec (try),
     between,
@@ -16,7 +16,6 @@ import Text.Megaparsec
     manyTill_,
     sepBy,
     some,
-    (<|>),
   )
 import Text.Megaparsec.Char
   ( alphaNumChar,
@@ -26,7 +25,6 @@ import Text.Megaparsec.Char
     string,
   )
 import Text.Megaparsec.Char.Lexer (decimal)
-import Prelude hiding (unlines)
 
 data Instruction = Instruction
   { count, from, to :: Int
@@ -48,7 +46,7 @@ input = fetch day
 
 sample :: Text
 sample =
-  unlines
+  T.unlines
     [ "    [D]    ",
       "[N] [C]    ",
       "[Z] [M] [P]",
@@ -123,8 +121,8 @@ solve order i =
   let Input {..} = doParse pInput i
       stacks = map catMaybes $ transpose crateLines
       mapping = HM.fromList $ zip stackNumbers stacks
-      mapping' = foldl (moveCrates order) mapping instructions
-   in pack $ map (head . (mapping' HM.!)) stackNumbers
+      mapping' = foldl' (moveCrates order) mapping instructions
+   in T.pack $ map (head . (mapping' HM.!)) stackNumbers
 
 part1 :: Text -> Text
 part1 = solve reverse

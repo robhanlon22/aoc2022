@@ -1,18 +1,16 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE ImportQualifiedPost #-}
-{-# LANGUAGE OverloadedStrings #-}
 
 module Day7 (part1Sample, part1Input, part2Sample, part2Input, input, sample) where
 
-import Control.Monad (void)
 import Data.HashMap.Lazy qualified as HM
 import Data.Sequence qualified as S
 import Data.Text qualified as T
 import Lib (Parser, fetch, solve)
+import RIO hiding (try)
+import RIO.List.Partial
 import Text.Megaparsec
 import Text.Megaparsec.Char (char, newline, printChar, string)
 import Text.Megaparsec.Char.Lexer qualified as L
-import Text.Pretty.Simple
 
 type Result = Integer
 
@@ -175,7 +173,7 @@ data DirectorySize = DirectorySize Integer [DirectorySize] deriving (Eq, Show)
 
 calculateSizes :: DirectoryNode -> DirectorySize
 calculateSizes (DirectoryNode children) =
-  foldl
+  foldl'
     ( \(DirectorySize size childSizes) child ->
         case child of
           DirectoryFsNode directory ->
