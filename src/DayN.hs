@@ -4,8 +4,9 @@
 
 module DayN (part1Sample, part1Input, part2Sample, part2Input, input, sample) where
 
-import qualified Data.Text as T
+import Data.Text qualified as T
 import Lib
+import RIO
 
 -- import qualified Data.HashSet as HS
 -- import qualified Data.Vector as V

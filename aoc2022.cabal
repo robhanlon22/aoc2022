@@ -29,20 +29,7 @@ library
       Day10
       Day11
       Day12
-      Day13
-      Day14
-      Day15
-      Day16
-      Day17
-      Day18
-      Day19
       Day2
-      Day20
-      Day21
-      Day22
-      Day23
-      Day24
-      Day25
       Day3
       Day4
       Day5
@@ -57,7 +44,6 @@ library
   hs-source-dirs:
       src
   default-extensions:
-      AutoDeriveTypeable
       BangPatterns
       BinaryLiterals
       ConstraintKinds
@@ -110,6 +96,7 @@ library
     , pretty-simple
     , range
     , rio
+    , search-algorithms
     , split
     , text
     , unordered-containers
@@ -123,7 +110,6 @@ executable aoc2022-exe
   hs-source-dirs:
       app
   default-extensions:
-      AutoDeriveTypeable
       BangPatterns
       BinaryLiterals
       ConstraintKinds
@@ -177,6 +163,7 @@ executable aoc2022-exe
     , pretty-simple
     , range
     , rio
+    , search-algorithms
     , split
     , text
     , unordered-containers
@@ -191,7 +178,6 @@ test-suite aoc2022-test
   hs-source-dirs:
       test
   default-extensions:
-      AutoDeriveTypeable
       BangPatterns
       BinaryLiterals
       ConstraintKinds
@@ -245,6 +231,7 @@ test-suite aoc2022-test
     , pretty-simple
     , range
     , rio
+    , search-algorithms
     , split
     , text
     , unordered-containers

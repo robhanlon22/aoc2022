@@ -90,24 +90,24 @@ class HasIdx app where
   setIdx :: app -> Int -> RIO App ()
 
 instance HasIdx App where
-  getIdx = liftIO . readIORef <$> appIdx
-  setIdx app = liftIO . writeIORef (appIdx app)
+  getIdx = readIORef <$> appIdx
+  setIdx app = writeIORef (appIdx app)
 
 class HasRound app where
   getRound :: app -> RIO App Integer
   setRound :: app -> Integer -> RIO App ()
 
 instance HasRound App where
-  getRound = liftIO . readIORef <$> appRound
-  setRound app = liftIO . writeIORef (appRound app)
+  getRound = readIORef <$> appRound
+  setRound app = writeIORef (appRound app)
 
 class HasMonkeys app where
   getMonkeys :: app -> RIO App (VB.Vector Monkey)
   setMonkeys :: app -> VB.Vector Monkey -> RIO App ()
 
 instance HasMonkeys App where
-  getMonkeys = liftIO . readIORef <$> appMonkeys
-  setMonkeys app = liftIO . writeIORef (appMonkeys app)
+  getMonkeys = readIORef <$> appMonkeys
+  setMonkeys app = writeIORef (appMonkeys app)
 
 pOperand :: Parser Operand
 pOperand = Old <$ string "old" <|> Val <$> L.decimal
@@ -234,20 +234,39 @@ runMonkeyBusiness appMitigateWorry rounds i = do
   logOptions <- logOptionsHandle stderr verbose
   withLogFunc logOptions $ \appLogFunc -> do
     appProcessContext <- mkDefaultProcessContext
-    runRIO App {..} $ replicateM_ rounds monkeyRound
+    runRIO App {..} $
+      replicateM_
+        rounds
+        ( do
+            monkeyRound
+            app <- ask
+            round <- getRound app
+            when
+              (round == 1 || round == 20 || round `mod` 1000 == 0)
+              ( do
+                  monkeys <- getMonkeys app
+                  logInfo $ fromString $ "Round: " ++ show round
+                  logInfo $ fromString $ "Top monkeys: " ++ show (topMonkeys monkeys)
+                  logInfo $ fromString $ "Monkey business: " ++ show (calcMonkeyBusiness monkeys)
+                  logInfo ""
+              )
+        )
     readIORef appMonkeys
 
-monkeyBusiness :: (Integer -> Integer) -> Int -> VB.Vector Monkey -> IO Int
-monkeyBusiness mitigateWorry rounds i = do
-  result <- runMonkeyBusiness mitigateWorry rounds i
-  return $
-    product $
-      take 2 $
-        reverse $
-          sort $
-            map
-              (\Monkey {..} -> inspections)
-              (toList result)
+topMonkeys :: Foldable t => t Monkey -> [Int]
+topMonkeys monkeys =
+  take 2 $
+    reverse $
+      sort $
+        map
+          (\Monkey {..} -> inspections)
+          (toList monkeys)
+
+calcMonkeyBusiness :: Foldable t => t Monkey -> Int
+calcMonkeyBusiness = product . topMonkeys
+
+monkeyBusiness :: (Integer -> Integer) -> Int -> Input -> IO Int
+monkeyBusiness mitigateWorry rounds i = calcMonkeyBusiness <$> runMonkeyBusiness mitigateWorry rounds i
 
 part1 :: Input -> IO Int
 part1 = monkeyBusiness (`div` 3) 20

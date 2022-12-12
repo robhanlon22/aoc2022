@@ -1,4 +1,16 @@
-module Lib (fetch, doParse, Parser, countBy, readFileUnsafe, solve, fetchSafe, solve2) where
+module Lib
+  ( fetch,
+    doParse,
+    Parser,
+    countBy,
+    readFileUnsafe,
+    solve,
+    fetchSafe,
+    solve2,
+    solve3,
+    ParserResult,
+  )
+where
 
 import Data.Text qualified as T
 import Data.Text.IO qualified as TIO
@@ -6,9 +18,13 @@ import Network.Curl (CurlCode (CurlOK), CurlOption (CurlCookie), curlGetString)
 import RIO
 import System.Directory (doesFileExist)
 import System.IO.Unsafe (unsafePerformIO)
-import Text.Megaparsec (Parsec, runParser)
+import Text.Megaparsec (ParseErrorBundle, Parsec, runParser)
 
 type Parser = Parsec Void Text
+
+type ParserError = ParseErrorBundle Text Void
+
+type ParserResult a = Either ParserError a
 
 -- | The URL for the Advent of Code input for a given day.
 url :: String -> String
@@ -66,3 +82,8 @@ solve part parser text = part $ doParse parser text
 
 solve2 :: Parser a -> (a -> b) -> Text -> b
 solve2 parser part text = part $ doParse parser text
+
+solve3 :: Parser a -> (a -> b) -> IO Text -> IO (ParserResult b)
+solve3 parser part text = do
+  t <- text
+  return $ part <$> runParser parser "" t

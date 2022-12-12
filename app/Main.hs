@@ -2,11 +2,14 @@ module Main (main) where
 
 import Criterion.Main
 import Data.Text
-import qualified Day10
-import qualified Day11
-import qualified Day5
-import qualified Day6
-import qualified Day9
+import Day10 qualified
+import Day11 qualified
+import Day12 qualified
+import Day5 qualified
+import Day6 qualified
+import Day9 qualified
+import RIO
+import Prelude (print)
 
 day5 :: (Text -> Text) -> Integer -> Text
 day5 f _ = f Day5.input
@@ -44,5 +47,10 @@ main =
         "Day11"
         [ bench "part1" $ whnf (const Day11.part1Input) zero,
           bench "part2" $ whnf (const Day11.part2Input) zero
+        ],
+      bgroup
+        "Day12"
+        [ bench "part1" $ whnfIO Day12.part1Input,
+          bench "part2" $ whnfIO Day12.part2Input
         ]
     ]
