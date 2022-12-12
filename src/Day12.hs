@@ -104,7 +104,8 @@ deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 neighborCoords :: (Int, Int) -> [(Int, Int)]
 neighborCoords (x, y) = map (bimap (x +) (y +)) deltas
 
-structures :: [[Mark]] -> ([((Int, Int), Mark)], HashMap (Int, Int) [(Int, Int)])
+structures ::
+  [[Mark]] -> ([((Int, Int), Mark)], HashMap (Int, Int) [(Int, Int)])
 structures ipt =
   let tuples =
         concat $
