@@ -7,6 +7,7 @@ import RIO
 import RIO.Char
 import RIO.HashMap qualified as HM
 import RIO.List
+import RIO.Partial
 import Text.Megaparsec
 import Text.Megaparsec.Char
 
@@ -21,29 +22,85 @@ input = fetchSafe day
 sample :: IO T.Text
 sample = return "Sabqponm\nabcryxxl\naccszExk\nacctuvwj\nabdefghi\n"
 
-type Input = [[Int]]
+type Input = [[Mark]]
+
+data Mark
+  = Start
+  | A
+  | B
+  | C
+  | D
+  | E
+  | F
+  | G
+  | H
+  | I
+  | J
+  | K
+  | L
+  | M
+  | N
+  | O
+  | P
+  | Q
+  | R
+  | S
+  | T
+  | U
+  | V
+  | W
+  | X
+  | Y
+  | Z
+  | End
+  deriving (Eq, Show, Ord, Enum)
 
 type Result = Maybe Int
 
-canStepTo :: (Num a, Ord a) => a -> a -> Bool
-canStepTo l r = l == r || l + 1 == r || r < l
+canStepTo :: Mark -> Mark -> Bool
+canStepTo l r = r < l || l == r || (l /= End && succ l == r)
 
-pMark :: Parser Int
+pMark :: Parser Mark
 pMark =
   choice
-    [ 0 <$ char 'S',
-      27 <$ char 'E',
-      (\x -> ord x - ord 'a' + 1) <$> letterChar
+    [ Start <$ char 'S',
+      A <$ char 'a',
+      B <$ char 'b',
+      C <$ char 'c',
+      D <$ char 'd',
+      E <$ char 'e',
+      F <$ char 'f',
+      G <$ char 'g',
+      H <$ char 'h',
+      I <$ char 'i',
+      J <$ char 'j',
+      K <$ char 'k',
+      L <$ char 'l',
+      M <$ char 'm',
+      N <$ char 'n',
+      O <$ char 'o',
+      P <$ char 'p',
+      Q <$ char 'q',
+      R <$ char 'r',
+      S <$ char 's',
+      T <$ char 't',
+      U <$ char 'u',
+      V <$ char 'v',
+      W <$ char 'w',
+      X <$ char 'x',
+      Y <$ char 'y',
+      Z <$ char 'z',
+      End <$ char 'E'
     ]
 
-pMarks :: Parser [Int]
+pMarks :: Parser [Mark]
 pMarks = manyTill pMark (lookAhead newline)
 
 pInput :: Parser Input
 pInput = pMarks `endBy` newline
 
 data Node = Node
-  { value :: Int,
+  { mark :: Mark,
     neighbors :: [(Int, Int)]
   }
   deriving (Eq, Show)
@@ -60,7 +117,7 @@ neighborCoords (x, y) =
 manhattan :: Num a => (a, a) -> (a, a) -> a
 manhattan (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
 
-structures :: [[Int]] -> ([((Int, Int), Int)], HashMap (Int, Int) Node)
+structures :: [[Mark]] -> ([((Int, Int), Mark)], HashMap (Int, Int) Node)
 structures ipt =
   let tuples =
         concat $
@@ -76,16 +133,16 @@ structures ipt =
       m = HM.fromList tuples
       graph =
         HM.mapWithKey
-          ( \k value ->
+          ( \k mark ->
               let neighbors =
                     mapMaybe
                       ( \c -> do
                           v <- HM.lookup c m
-                          guard $ value `canStepTo` v
+                          guard $ mark `canStepTo` v
                           return c
                       )
                       (neighborCoords k)
-               in Node {value = value, neighbors = neighbors}
+               in Node {mark = mark, neighbors = neighbors}
           )
           m
    in (tuples, graph)
@@ -115,20 +172,20 @@ findCoordsForValue value =
 findCoordForValue :: Eq a1 => a1 -> [(a2, a1)] -> Maybe a2
 findCoordForValue value tuples = headMaybe $ findCoordsForValue value tuples
 
-findEnd :: [(a, Int)] -> Maybe a
-findEnd = findCoordForValue 27
+findEnd :: [(a, Mark)] -> Maybe a
+findEnd = findCoordForValue End
 
 part1 :: Input -> Result
 part1 ipt = do
   let (tuples, graph) = structures ipt
-  start <- findCoordForValue 0 tuples
+  start <- findCoordForValue Start tuples
   end <- findEnd tuples
   minCost graph start end
 
 part2 :: Input -> Result
 part2 ipt = do
   let (tuples, graph) = structures ipt
-  let starts = findCoordsForValue 1 tuples
+  let starts = findCoordsForValue A tuples
   end <- findEnd tuples
   let costs = mapMaybe (\start -> minCost graph start end) starts
   minimumMaybe costs
