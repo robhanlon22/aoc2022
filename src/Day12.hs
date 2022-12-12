@@ -99,16 +99,10 @@ pInput :: Parser Input
 pInput = pMarks `endBy` newline
 
 deltas :: [(Int, Int)]
-deltas = [(dx, dy) | dx <- [-1 .. 1], dy <- [-1 .. 1]]
+deltas = [(-1, 0), (1, 0), (0, -1), (0, 1)]
 
 neighborCoords :: (Int, Int) -> [(Int, Int)]
-neighborCoords (x, y) =
-  map
-    (bimap (x +) (y +))
-    deltas
-
-manhattan :: Num a => (a, a) -> (a, a) -> a
-manhattan (x1, y1) (x2, y2) = abs (x1 - x2) + abs (y1 - y2)
+neighborCoords (x, y) = map (bimap (x +) (y +)) deltas
 
 structures :: [[Mark]] -> ([((Int, Int), Mark)], HashMap (Int, Int) [(Int, Int)])
 structures ipt =
@@ -138,15 +132,17 @@ structures ipt =
           m
    in (tuples, graph)
 
-minCost :: HashMap (Int, Int) [(Int, Int)] -> (Int, Int) -> (Int, Int) -> Maybe Int
-minCost graph start end = do
-  (cost, _) <-
-    dijkstra
+transitionCost :: a -> b -> Int
+transitionCost = const . const 1
+
+minCost :: (Ord k, Hashable k) => HashMap k [k] -> k -> k -> Maybe Int
+minCost graph start end =
+  fst
+    <$> dijkstra
       (\k -> fromMaybe [] $ HM.lookup k graph)
-      manhattan
+      transitionCost
       (== end)
       start
-  return cost
 
 findCoordsForValue :: Eq a => a -> [(b, a)] -> [b]
 findCoordsForValue value =
@@ -164,18 +160,19 @@ findEnd = findCoordForValue End
 
 part1 :: Input -> Result
 part1 ipt = do
-  let (tuples, graph) = structures ipt
   start <- findCoordForValue Start tuples
   end <- findEnd tuples
   minCost graph start end
+  where
+    (tuples, graph) = structures ipt
 
 part2 :: Input -> Result
 part2 ipt = do
-  let (tuples, graph) = structures ipt
-  let starts = findCoordsForValue A tuples
   end <- findEnd tuples
-  let costs = mapMaybe (\start -> minCost graph start end) starts
-  minimumMaybe costs
+  minimumMaybe $ mapMaybe (\start -> minCost graph start end) starts
+  where
+    (tuples, graph) = structures ipt
+    starts = findCoordsForValue A tuples
 
 solve' :: (Input -> Result) -> IO Text -> IO (ParserResult Result)
 solve' = solve3 pInput
