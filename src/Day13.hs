@@ -34,7 +34,6 @@ type Result = Maybe Int
 data Packet = Literal Int | Packet [Packet] deriving (Eq, Show)
 
 instance Ord Packet where
-  compare :: Packet -> Packet -> Ordering
   compare (Packet []) (Packet []) = EQ
   compare (Packet []) _ = LT
   compare _ (Packet []) = GT
