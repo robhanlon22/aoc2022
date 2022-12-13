@@ -87,11 +87,11 @@ twoDivider = dividerPacket 2
 sixDivider :: Packet
 sixDivider = dividerPacket 6
 
+dividers = [twoDivider, sixDivider]
+
 part2 :: Input -> Result
 part2 ipt =
-  let packets =
-        sort $
-          twoDivider : sixDivider : concatMap (\(a, b) -> [a, b]) ipt
+  let packets = sort $ dividers ++ concatMap (\(a, b) -> [a, b]) ipt
    in do
         twoIndex <- elemIndex twoDivider packets
         sixIndex <- elemIndex sixDivider packets
