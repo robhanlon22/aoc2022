@@ -76,7 +76,7 @@ part1 =
     . sum
     . catMaybes
     . zipWith
-      (\i (lhs, rhs) -> if lhs < rhs then Just i else Nothing)
+      (\i (lhs, rhs) -> if lhs <= rhs then Just i else Nothing)
       [1 ..]
 
 dividerPacket :: Int -> Packet
