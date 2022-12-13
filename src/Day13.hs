@@ -87,6 +87,7 @@ twoDivider = dividerPacket 2
 sixDivider :: Packet
 sixDivider = dividerPacket 6
 
+dividers :: [Packet]
 dividers = [twoDivider, sixDivider]
 
 part2 :: Input -> Result
