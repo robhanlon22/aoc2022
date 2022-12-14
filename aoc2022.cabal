@@ -30,6 +30,8 @@ library
       Day11
       Day12
       Day13
+      Day14
+      Day1_2016
       Day2
       Day3
       Day4
@@ -92,6 +94,7 @@ library
     , directory
     , hashable
     , heap
+    , lens
     , megaparsec
     , mtl
     , pretty-simple
@@ -159,6 +162,7 @@ executable aoc2022-exe
     , directory
     , hashable
     , heap
+    , lens
     , megaparsec
     , mtl
     , pretty-simple
@@ -227,6 +231,7 @@ test-suite aoc2022-test
     , directory
     , hashable
     , heap
+    , lens
     , megaparsec
     , mtl
     , pretty-simple

@@ -5,9 +5,11 @@ module Lib
     countBy,
     readFileUnsafe,
     solve,
+    fetchYearDay,
     fetchSafe,
     solve2,
     solve3,
+    ParserError,
     ParserResult,
   )
 where
@@ -27,8 +29,13 @@ type ParserError = ParseErrorBundle Text Void
 type ParserResult a = Either ParserError a
 
 -- | The URL for the Advent of Code input for a given day.
-url :: String -> String
-url dayStr = "https://adventofcode.com/2022/day/" ++ dayStr ++ "/input"
+url :: String -> String -> String
+url yearStr dayStr =
+  "https://adventofcode.com/"
+    ++ yearStr
+    ++ "/day/"
+    ++ dayStr
+    ++ "/input"
 
 -- | Loads the saved session secret from disk and returns a 'CurlCookie' to be
 -- used in an authenticated request.
@@ -37,33 +44,40 @@ readCookie = do
   token <- TIO.readFile "session.secret"
   return $ CurlCookie $ T.unpack $ "session=" <> token
 
--- | Fetches the input for a given day. Attempts to load cached input from disk.
--- If cached input is not present, load from the Advent of Code website.
-fetchSafe :: Integer -> IO Text
-fetchSafe day = do
+fetchYearDay :: Integer -> Integer -> IO (Either (CurlCode, String) Text)
+fetchYearDay year day = do
+  let yearStr = show year
   let dayStr = show day
-  let filename = dayStr ++ ".txt"
+  let filename = yearStr ++ "_" ++ dayStr ++ ".txt"
 
   exists <- doesFileExist filename
 
   if exists
-    then TIO.readFile filename
+    then Right <$> TIO.readFile filename
     else do
       cookie <- readCookie
-      response <- curlGetString (url dayStr) [cookie]
+      response <- curlGetString (url yearStr dayStr) [cookie]
       case response of
         (CurlOK, body) -> do
           let body' = T.pack body
           TIO.writeFile filename body'
-          return body'
-        _ -> error $ show response
+          return $ Right body'
+        err ->
+          return $ Left err
+
+-- | Fetches the input for a given day. Attempts to load cached input from disk.
+-- If cached input is not present, load from the Advent of Code website.
+fetchSafe :: Integer -> IO Text
+fetchSafe day = do
+  result <- fetchYearDay 2022 day
+  return $ either (error . show) id result
 
 readFileUnsafe :: FilePath -> Text
 readFileUnsafe = unsafePerformIO . TIO.readFile
 
 -- | For convenience, unsafely extract the Text from the result of fetchSafe.
--- Would never be used in production code, but this is Advent of Code!
 fetch :: Integer -> Text
+-- Would never be used in production code, but this is Advent of Code!
 fetch = unsafePerformIO . fetchSafe
 
 -- | A quick-and-dirty unsafe 'runParser' wrapper that returns the parsed result

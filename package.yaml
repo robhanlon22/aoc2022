@@ -68,6 +68,7 @@ dependencies:
   - hashable
   - heap
   - megaparsec
+  - lens
   - mtl
   - pretty-simple
   - range
