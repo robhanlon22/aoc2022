@@ -1,9 +1,4 @@
-module Day1_2016
-  ( part1Input,
-    part2Input,
-    input,
-  )
-where
+module Day1_2016 where
 
 import Control.Lens
 import Data.Text qualified as T
